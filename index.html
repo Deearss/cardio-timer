@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🔥 Cardio Timer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --or:#E8681A; --or2:#b8511a; --bg:#080808; --card:#0f0f0f; --border:#1a1a1a; --border2:#1e1e1e; }
+    body { font-family:'Inter',sans-serif; background:var(--bg); color:#fff; min-height:100vh; }
+
+    .container  { max-width:1024px; margin:0 auto; padding:2rem 1rem; }
+    .hdr        { text-align:center; margin-bottom:2rem; }
+    .hdr h1     { color:var(--or); font-size:1.875rem; font-weight:900; letter-spacing:-.02em; margin-bottom:.25rem; }
+    .hdr p      { color:#4b5563; font-size:.75rem; font-weight:500; }
+
+    /* ── Controls Row ── */
+    .selects-row { display:flex; flex-direction:column; gap:.75rem; max-width:384px; margin:0 auto 1.5rem; }
+    .field-label { display:block; font-size:10px; font-weight:700; color:#6b7280; text-transform:uppercase; letter-spacing:.1em; margin-bottom:5px; }
+    .field-rel   { position:relative; }
+    .field-arrow { position:absolute; right:14px; top:50%; transform:translateY(-50%); color:#4b5563; pointer-events:none; }
+    select       { width:100%; background:#111; border:1px solid #232323; border-radius:12px; padding:12px 16px; color:#fff; font-family:'Inter',sans-serif; font-weight:600; font-size:.875rem; -webkit-appearance:none; appearance:none; outline:none; cursor:pointer; transition:border-color .15s; }
+    select:focus { border-color:var(--or); }
+    select option{ background:#111; }
+
+    /* ── Difficulty pills ── */
+    .diff-pills  { display:flex; gap:8px; }
+    .diff-pill   { flex:1; padding:10px 8px; border-radius:10px; border:1.5px solid #232323; background:#111; color:#6b7280; font-family:'Inter',sans-serif; font-size:.75rem; font-weight:700; cursor:pointer; text-align:center; transition:all .2s; line-height:1.3; }
+    .diff-pill:hover { border-color:#444; color:#d1d5db; }
+    .diff-pill.active-p { border-color:var(--or); background:rgba(232,104,26,.12); color:var(--or); }
+    .diff-pill.active-m { border-color:#f59e0b; background:rgba(245,158,11,.1);  color:#f59e0b; }
+    .diff-pill.active-a { border-color:#ef4444; background:rgba(239,68,68,.1);   color:#ef4444; }
+
+    /* ── Ratio badge ── */
+    #ratio-badge { display:inline-block; font-size:10px; font-weight:700; padding:4px 12px; border-radius:999px; background:#1a1a1a; color:#4b5563; margin-top:6px; transition:all .3s; }
+
+    /* ── Main layout ── */
+    .main     { display:flex; flex-direction:column; gap:1.25rem; }
+    .col-left { flex-shrink:0; }
+    .col-right{ flex:1; }
+
+    /* ── Card ── */
+    .card      { background:var(--card); border:1px solid var(--border); border-radius:1rem; padding:1.25rem; }
+    .card-glow { box-shadow:0 0 55px rgba(232,104,26,.13); }
+
+    .badge-wrap { text-align:center; margin-bottom:.75rem; }
+    #phase-badge{ display:inline-block; font-size:10px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; padding:3px 14px; border-radius:999px; background:#1a1a1a; color:#6b7280; }
+
+    .ring-wrap  { position:relative; display:flex; justify-content:center; align-items:center; }
+    .ring-svg   { width:176px; height:176px; }
+    .ring-inner { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+    #ex-emoji   { font-size:3rem; line-height:1; }
+    #timer-num  { font-size:1.9rem; font-weight:900; font-variant-numeric:tabular-nums; margin-top:6px; line-height:1; color:var(--or); }
+    #ex-label   { font-size:11px; font-weight:600; text-align:center; padding:0 1.5rem; margin-top:6px; color:#4b5563; }
+    #ex-hint    { text-align:center; font-size:10px; font-weight:500; margin-top:14px; color:#333; }
+    .ring-track { stroke:#1e1e1e; }
+    .ring-fill  { stroke:var(--or); stroke-linecap:round; transform:rotate(-90deg); transform-origin:50% 50%; transition:stroke-dashoffset .92s linear,stroke .3s; }
+    .ring-rest  { stroke:#374151; }
+
+    .prog-section { margin-top:1rem; }
+    .prog-header  { display:flex; justify-content:space-between; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#4b5563; margin-bottom:6px; }
+    .prog-track   { width:100%; height:6px; border-radius:999px; overflow:hidden; background:#1a1a1a; }
+    #prog-bar     { height:100%; border-radius:999px; background:linear-gradient(90deg,#E8681A,#f9a55a); transition:width .92s linear; width:0%; }
+    .prog-labels  { display:flex; justify-content:space-between; font-size:10px; color:#374151; margin-top:4px; }
+
+    .controls { display:flex; gap:8px; margin-top:1rem; }
+    .btn      { border-radius:12px; font-weight:700; font-family:'Inter',sans-serif; font-size:.875rem; cursor:pointer; border:none; transition:all .15s; padding:14px 16px; }
+    .btn:active:not(:disabled) { transform:scale(.96); }
+    .btn-primary { background:linear-gradient(135deg,var(--or),var(--or2)); color:#fff; flex:1; }
+    .btn-primary:hover:not(:disabled) { filter:brightness(1.12); }
+    .btn-primary:disabled { background:#1a1a1a !important; color:#374151 !important; cursor:not-allowed; }
+    .btn-ghost  { background:#131313; border:1px solid #222 !important; color:#9ca3af; flex:1; }
+    .btn-ghost:hover:not(:disabled) { background:#1c1c1c; color:#d1d5db; }
+    .btn-ghost:disabled { opacity:.35; cursor:not-allowed; }
+    .btn-ghost.is-paused { background:linear-gradient(135deg,var(--or),var(--or2)) !important; color:#fff !important; border-color:transparent !important; }
+    .btn-reset  { flex:0; }
+    .footer-note{ font-size:10px; text-align:center; margin-top:10px; color:#2a2a2a; }
+
+    .list-title { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:#444; margin-bottom:12px; }
+    #ex-list    { display:flex; flex-direction:column; gap:8px; }
+    .ex-item    { display:flex; align-items:center; gap:.75rem; padding:.75rem; border-radius:.75rem; background:#111; border:1px solid var(--border2); transition:all .3s; }
+    .ex-item.active { background:rgba(232,104,26,.09); border:1.5px solid var(--or); box-shadow:0 0 22px rgba(232,104,26,.22); }
+    .ex-item.done   { background:#0c0c0c; border:1px solid var(--border); opacity:.4; }
+    .ex-emoji   { font-size:1.5rem; flex-shrink:0; }
+    .ex-info    { flex:1; min-width:0; }
+    .ex-name    { font-weight:600; font-size:.75rem; color:#d1d5db; }
+    .ex-tip     { font-size:10px; color:#4b5563; }
+    .ex-dur     { font-size:10px; font-weight:600; margin-top:2px; color:#3a3a3a; transition:color .3s; }
+    .ex-item.active .ex-dur { color:var(--or); }
+    .ex-item.done   .ex-dur { color:#1a1a1a; }
+    .ex-status  { font-size:.875rem; font-weight:700; flex-shrink:0; color:#2e2e2e; }
+    .ex-item.done   .ex-status { color:#22c55e; }
+    .ex-item.active .ex-status { color:var(--or); }
+
+    @keyframes bounce    { from{transform:translateY(0) scale(1)}   to{transform:translateY(-10px) scale(1.09)} }
+    @keyframes breathe   { 0%,100%{opacity:1;transform:scale(1)}   50%{opacity:.5;transform:scale(.88)} }
+    @keyframes cele      { from{transform:rotate(-9deg) scale(1)}   to{transform:rotate(9deg) scale(1.16)} }
+    @keyframes pulseRing { 0%,100%{box-shadow:0 0 40px rgba(232,104,26,.15)} 50%{box-shadow:0 0 70px rgba(232,104,26,.35)} }
+    .anim-bounce  { animation:bounce    .55s ease-in-out infinite alternate; }
+    .anim-breathe { animation:breathe  1.9s  ease-in-out infinite; }
+    .anim-cele    { animation:cele      .42s ease-in-out infinite alternate; }
+    .anim-ring    { animation:pulseRing  2s  ease-in-out infinite; }
+
+    @media (min-width:640px) {
+      .container  { padding:2.5rem 1.5rem; }
+      .hdr h1     { font-size:2.25rem; }
+      .hdr p      { font-size:.875rem; }
+      .selects-row{ flex-direction:row; max-width:100%; }
+      .selects-row .field-wrap { flex:1; }
+      .card       { padding:1.75rem; }
+      .ring-svg   { width:208px; height:208px; }
+      #ex-emoji   { font-size:3.75rem; }
+      #timer-num  { font-size:2.4rem; }
+      .ex-emoji   { font-size:1.75rem; }
+      .ex-name    { font-size:.875rem; }
+      .ex-tip,.ex-dur { font-size:.75rem; }
+      .ex-item    { padding:1rem; }
+    }
+    @media (min-width:1024px) {
+      .container  { padding:3.5rem 2rem; }
+      .hdr h1     { font-size:3rem; }
+      .main       { flex-direction:row; align-items:flex-start; gap:1.5rem; }
+      .col-left   { width:380px; }
+      .ring-svg   { width:240px; height:240px; }
+      #ex-emoji   { font-size:4rem; }
+      #timer-num  { font-size:2.8rem; }
+      #ex-list    { gap:12px; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="hdr">
+    <h1>🔥 CARDIO TIMER</h1>
+    <p>5 gerakan cardio otomatis — push yourself!</p>
+  </div>
+
+  <!-- Selects Row -->
+  <div class="selects-row">
+
+    <!-- Duration -->
+    <div class="field-wrap">
+      <label class="field-label">⏱ Durasi Latihan</label>
+      <div class="field-rel">
+        <select id="dur">
+          <option value="300">⏱ 5 Menit</option>
+          <option value="600" selected>⏱ 10 Menit</option>
+          <option value="900">⏱ 15 Menit</option>
+          <option value="1200">⏱ 20 Menit</option>
+          <option value="1800">⏱ 30 Menit</option>
+          <option value="2700">⏱ 45 Menit</option>
+          <option value="3600">⏱ 60 Menit</option>
+        </select>
+        <span class="field-arrow">▾</span>
+      </div>
+    </div>
+
+    <!-- Difficulty -->
+    <div class="field-wrap">
+      <label class="field-label">💪 Level Kesulitan</label>
+      <div class="diff-pills">
+        <button class="diff-pill active-p" id="pill-p" onclick="setDiff('pemula')">🟢 Pemula<br><span style="font-size:9px;opacity:.8">Kerja 1× · Istirahat 1.5×</span></button>
+        <button class="diff-pill" id="pill-m" onclick="setDiff('menengah')">🟡 Menengah<br><span style="font-size:9px;opacity:.8">Kerja 1× · Istirahat 1×</span></button>
+        <button class="diff-pill" id="pill-a" onclick="setDiff('lanjut')">🔴 Lanjut<br><span style="font-size:9px;opacity:.8">Kerja 2× · Istirahat 1×</span></button>
+      </div>
+      <div style="margin-top:6px;">
+        <span id="ratio-badge">🟢 Pemula — Rasio kerja:istirahat = 1:1.5</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+
+    <!-- LEFT -->
+    <div class="col-left">
+      <div id="timer-card" class="card card-glow">
+        <div class="badge-wrap"><span id="phase-badge">SIAP MULAI</span></div>
+        <div class="ring-wrap">
+          <svg class="ring-svg" viewBox="0 0 204 204">
+            <circle class="ring-track" cx="102" cy="102" r="88" fill="none" stroke-width="9"/>
+            <circle id="ring" class="ring-fill" cx="102" cy="102" r="88" fill="none" stroke-width="9"
+              stroke-dasharray="552.92" stroke-dashoffset="552.92"/>
+          </svg>
+          <div class="ring-inner">
+            <div id="ex-emoji">🏁</div>
+            <div id="timer-num">--:--</div>
+            <div id="ex-label">Pilih durasi & mulai</div>
+          </div>
+        </div>
+        <p id="ex-hint">Durasi per gerakan akan tampil di sini</p>
+      </div>
+
+      <div class="prog-section">
+        <div class="prog-header"><span>Total Progress</span><span id="pct">0%</span></div>
+        <div class="prog-track"><div id="prog-bar"></div></div>
+        <div class="prog-labels"><span id="t-elapsed">0:00 berlalu</span><span id="t-remain">—</span></div>
+      </div>
+
+      <div class="controls">
+        <button id="btn-s" class="btn btn-primary" onclick="handleStart()">▶ Mulai</button>
+        <button id="btn-p" class="btn btn-ghost" onclick="handlePause()" disabled>⏸ Jeda</button>
+        <button id="btn-r" class="btn btn-ghost btn-reset" onclick="handleReset()">↺</button>
+      </div>
+      <p class="footer-note" id="footer-note">Rasio kerja:istirahat disesuaikan dengan level pilihan kamu 💪</p>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="col-right">
+      <p class="list-title">📋 Urutan Gerakan</p>
+      <div id="ex-list"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const EX = [
+    { name:'Jumping Jacks',     emoji:'⭐', tip:'Lompat, buka-tutup kaki & tangan!' },
+    { name:'Jump Squats',       emoji:'🦵', tip:'Squat lalu lompat setinggi mungkin!' },
+    { name:'Burpees',           emoji:'💪', tip:'Full body — habis-habisan!' },
+    { name:'Mountain Climbers', emoji:'🧗', tip:'Posisi plank, kaki bergantian cepat!' },
+    { name:'Jumping Jacks',     emoji:'⭐', tip:'Finisher! Habiskan semua sisa tenaga!' },
+  ];
+
+  /*
+    Riset HIIT work:rest ratio:
+    - Pemula     → 1 : 1.5  (kerja 1 bagian, istirahat 1.5 bagian)
+    - Menengah   → 1 : 1    (kerja = istirahat)
+    - Lanjut     → 2 : 1    (kerja 2x lebih lama dari istirahat)
+
+    Rumus total segmen (5 gerakan, 4 istirahat):
+    total = 5×exDur + 4×restDur
+    Pemula:   restDur = 1.5×exDur → total = 5x + 6x  = 11x → exDur = totalDur/11
+    Menengah: restDur = 1.0×exDur → total = 5x + 4x  = 9x  → exDur = totalDur/9
+    Lanjut:   restDur = 0.5×exDur → total = 5x + 2x  = 7x  → exDur = totalDur/7
+  */
+  const LEVELS = {
+    pemula:   { ratio:1.5, divisor:11, label:'🟢 Pemula — Rasio kerja:istirahat = 1:1.5',  pillClass:'active-p', pillId:'pill-p', note:'Istirahat 1.5× lebih lama dari gerakan — cocok buat pemula 🟢' },
+    menengah: { ratio:1.0, divisor:9,  label:'🟡 Menengah — Rasio kerja:istirahat = 1:1',  pillClass:'active-m', pillId:'pill-m', note:'Istirahat sama lama dengan gerakan — level menengah 🟡' },
+    lanjut:   { ratio:0.5, divisor:7,  label:'🔴 Lanjut — Rasio kerja:istirahat = 2:1',    pillClass:'active-a', pillId:'pill-a', note:'Istirahat setengah dari gerakan — siap mati di lapangan 🔴' },
+  };
+
+  const CIRC = 2 * Math.PI * 88;
+  let iv=null, phase='idle', exIdx=0;
+  let tLeft=0, totLeft=0, totDur=0, exDur=0, restDur=0, isPaused=false;
+  let diff = 'pemula';
+
+  const $   = id => document.getElementById(id);
+  const fmt = s  => String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0');
+
+  function setDiff(d) {
+    if (phase !== 'idle') return; // jangan ganti saat latihan berjalan
+    diff = d;
+    const lv = LEVELS[d];
+    // update pills
+    ['pemula','menengah','lanjut'].forEach(k => {
+      const pill = $(LEVELS[k].pillId);
+      pill.className = 'diff-pill' + (k === d ? ' ' + LEVELS[k].pillClass : '');
+    });
+    $('ratio-badge').textContent = lv.label;
+    $('footer-note').textContent = lv.note;
+    buildList();
+  }
+
+  function calcDurs() {
+    const lv = LEVELS[diff];
+    const ed = Math.floor(parseInt($('dur').value) / lv.divisor);
+    const rd = Math.floor(ed * lv.ratio);
+    return { ed, rd };
+  }
+
+  function setRing(cur, tot, rest) {
+    const ring = $('ring');
+    ring.style.strokeDashoffset = tot > 0 ? CIRC * (1 - cur/tot) : CIRC;
+    ring.className = 'ring-fill' + (rest ? ' ring-rest' : '');
+  }
+
+  function buildList() {
+    const { ed, rd } = calcDurs();
+    $('ex-list').innerHTML = EX.map((e, i) => {
+      const isLast = i === EX.length - 1;
+      const info = '⏱ ' + fmt(ed) + (isLast ? ' · 🏁 Selesai!' : ' · 💤 ' + fmt(rd) + ' istirahat');
+      return '<div id="ei' + i + '" class="ex-item">'
+        + '<span class="ex-emoji">' + e.emoji + '</span>'
+        + '<div class="ex-info">'
+        + '<p class="ex-name">' + e.name + '</p>'
+        + '<p class="ex-tip">' + e.tip + '</p>'
+        + '<p id="et' + i + '" class="ex-dur">' + info + '</p>'
+        + '</div>'
+        + '<span id="es' + i + '" class="ex-status">—</span>'
+        + '</div>';
+    }).join('');
+  }
+
+  function refreshList() {
+    EX.forEach((_, i) => {
+      const card = $('ei' + i), stat = $('es' + i);
+      const done = phase === 'done' || i < exIdx;
+      const cur  = i === exIdx && phase !== 'idle' && phase !== 'done';
+      card.className = 'ex-item' + (done ? ' done' : cur ? ' active' : '');
+      stat.textContent = done ? '✅' : cur ? (phase === 'rest' ? '💤' : '🔥') : '—';
+    });
+  }
+
+  function refreshProgress() {
+    const elapsed = totDur - totLeft;
+    const pct = totDur > 0 ? Math.min(100, Math.round(elapsed / totDur * 100)) : 0;
+    $('prog-bar').style.width = pct + '%';
+    $('pct').textContent = pct + '%';
+    $('t-elapsed').textContent = fmt(elapsed) + ' berlalu';
+    $('t-remain').textContent  = totLeft > 0 ? fmt(totLeft) + ' tersisa' : 'Selesai! 🎉';
+  }
+
+  function badge(txt, bg, color) {
+    const b = $('phase-badge');
+    b.textContent = txt; b.style.background = bg; b.style.color = color;
+  }
+
+  function render() {
+    const ex = EX[exIdx] || {};
+    const emo = $('ex-emoji'), num = $('timer-num'), lbl = $('ex-label');
+    const card = $('timer-card');
+
+    if (phase === 'exercise') {
+      emo.textContent = ex.emoji; emo.className = 'anim-bounce';
+      num.textContent = fmt(tLeft); num.style.color = '#E8681A';
+      lbl.textContent = ex.name;   lbl.style.color  = '#f97316';
+      badge('GERAKAN ' + (exIdx+1) + ' / ' + EX.length, 'rgba(232,104,26,.16)', '#E8681A');
+      card.className = 'card card-glow anim-ring';
+      setRing(tLeft, exDur, false);
+
+    } else if (phase === 'rest') {
+      emo.textContent = '😮‍💨'; emo.className = 'anim-breathe';
+      num.textContent = fmt(tLeft); num.style.color = '#6b7280';
+      lbl.textContent = 'Istirahat... lanjut ' + (EX[exIdx+1] ? EX[exIdx+1].name : '') + '!';
+      lbl.style.color = '#6b7280';
+      badge('ISTIRAHAT', '#1a1a1a', '#6b7280');
+      card.className = 'card';
+      setRing(tLeft, restDur, true);
+
+    } else if (phase === 'done') {
+      emo.textContent = '🎉'; emo.className = 'anim-cele';
+      num.textContent = '00:00'; num.style.color = '#22c55e';
+      lbl.textContent = 'Selesai! Kerja bagus! 💪'; lbl.style.color = '#22c55e';
+      badge('✅ DONE!', 'rgba(34,197,94,.12)', '#22c55e');
+      card.className = 'card';
+      setRing(0, 1, false);
+
+    } else {
+      emo.textContent = '🏁'; emo.className = '';
+      num.textContent = '--:--'; num.style.color = '#E8681A';
+      lbl.textContent = 'Pilih durasi & mulai'; lbl.style.color = '#4b5563';
+      badge('SIAP MULAI', '#1a1a1a', '#6b7280');
+      card.className = 'card card-glow';
+      setRing(0, 1, false);
+    }
+
+    refreshProgress();
+    refreshList();
+  }
+
+  function tick() {
+    tLeft--;
+    totLeft = Math.max(0, totLeft - 1);
+
+    if (tLeft <= 0) {
+      if (phase === 'exercise') {
+        if (exIdx < EX.length - 1) { phase = 'rest'; tLeft = restDur; }
+        else { phase='done'; totLeft=0; clearInterval(iv); iv=null; setBtns('done'); render(); return; }
+      } else if (phase === 'rest') {
+        exIdx++; phase='exercise'; tLeft=exDur;
+      }
+    }
+    render();
+  }
+
+  function go() { if (iv) clearInterval(iv); iv = setInterval(tick, 1000); }
+
+  function handleStart() {
+    if (phase === 'idle' || phase === 'done') {
+      const { ed, rd } = calcDurs();
+      totDur  = parseInt($('dur').value);
+      exDur   = ed;
+      restDur = rd;
+      totLeft = totDur;
+      exIdx=0; phase='exercise'; tLeft=exDur; isPaused=false;
+      $('ex-hint').textContent = 'Gerakan: ' + fmt(exDur) + ' · Istirahat: ' + fmt(restDur) + ' · ' + LEVELS[diff].label.split('—')[0].trim();
+      buildList();
+    }
+    go(); setBtns('running'); render();
+  }
+
+  function handlePause() {
+    if (!isPaused) {
+      clearInterval(iv); iv=null; isPaused=true;
+      $('btn-p').textContent='▶ Lanjut';
+      $('btn-p').classList.add('is-paused');
+    } else {
+      go(); isPaused=false;
+      $('btn-p').textContent='⏸ Jeda';
+      $('btn-p').classList.remove('is-paused');
+    }
+  }
+
+  function handleReset() {
+    clearInterval(iv); iv=null;
+    phase='idle'; exIdx=0; tLeft=0; totLeft=0; totDur=0; exDur=0; restDur=0; isPaused=false;
+    $('btn-p').classList.remove('is-paused');
+    $('btn-p').textContent='⏸ Jeda';
+    $('ex-hint').textContent='Durasi per gerakan akan tampil di sini';
+    setBtns('idle'); buildList(); render();
+  }
+
+  function setBtns(state) {
+    const s=$('btn-s'), p=$('btn-p');
+    p.classList.remove('is-paused'); p.textContent='⏸ Jeda';
+    if (state === 'running') { s.disabled=true; p.disabled=false; }
+    else { s.disabled=false; p.disabled=true; s.textContent = state==='done' ? '↺ Ulangi' : '▶ Mulai'; }
+  }
+
+  buildList(); render();
+  $('dur').addEventListener('change', () => { if (phase === 'idle') buildList(); });
+</script>
+</body>
+</html>
