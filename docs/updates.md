@@ -124,3 +124,37 @@ Icon di tengah SVG ring diganti dari emoji ke Lucide icons:
 #### 4. Default durasi latihan (`src/store/timerStore.ts`)
 
 Nilai default `selectedDuration` diubah dari `600` (10 menit) menjadi `300` (5 menit).
+
+---
+
+## Update 3 — Sound Effects & Keyboard Shortcut
+
+### Apa yang dilakukan
+
+#### 1. Sound effect transisi fase (`public/sounds/bong.mp3`)
+
+Suara diputar setiap kali fase berpindah ke `exercise` atau `rest`, memberi tahu user tanpa perlu menatap layar.
+
+Implementasi di `src/components/CardioTimer.tsx`:
+- `audioRef` — menyimpan instance `Audio` agar tidak di-recreate setiap render
+- `prevPhaseRef` — melacak fase sebelumnya sehingga suara hanya play saat ada transisi, bukan saat pertama render
+
+#### 2. Sound effect ticking (`public/sounds/timer-fixed.mp3`)
+
+Suara denting waktu yang loop terus-menerus selama timer berjalan (fase `exercise` atau `rest`, tidak di-pause). Berhenti otomatis saat dijeda, di-reset, atau selesai.
+
+Implementasi:
+- `tickAudioRef` — instance `Audio` dengan `loop = true`
+- `useEffect` yang watch `phase` dan `isPaused` — play/pause berdasarkan kondisi timer
+
+#### 3. Keyboard shortcut Spasi
+
+User dapat menekan `Space` untuk mengontrol timer tanpa menyentuh mouse:
+
+| Kondisi | Efek tekan Spasi |
+|---------|-----------------|
+| `idle` / `done` | Mulai / Ulangi |
+| `exercise` / `rest` (berjalan) | Jeda |
+| `exercise` / `rest` (dijeda) | Lanjut |
+
+Catatan: jika fokus ada di `<button>`, spasi tidak di-intercept agar tidak konflik dengan native browser behavior.

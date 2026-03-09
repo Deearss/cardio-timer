@@ -20,6 +20,9 @@ export default function CardioTimer() {
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastTickRef = useRef<number>(0);
   const elapsedRef = useRef<number>(0);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const tickAudioRef = useRef<HTMLAudioElement | null>(null);
+  const prevPhaseRef = useRef<string>("idle");
 
   const {
     phase,
@@ -79,17 +82,47 @@ export default function CardioTimer() {
     if (phase === "done") stop();
   }, [phase, stop]);
 
+  // Init audio
+  useEffect(() => {
+    audioRef.current = new Audio("/sounds/bong.mp3");
+    tickAudioRef.current = new Audio("/sounds/timer-fixed_cutted.mp3");
+    tickAudioRef.current.loop = true;
+  }, []);
+
+  // Play sound on phase transition to exercise or rest
+  useEffect(() => {
+    if (prevPhaseRef.current !== phase) {
+      if (phase === "exercise" || phase === "rest") {
+        audioRef.current?.play().catch(() => {});
+      }
+      prevPhaseRef.current = phase;
+    }
+  }, [phase]);
+
+  // Play/pause ticking sound while timer is running
+  useEffect(() => {
+    const tick = tickAudioRef.current;
+    if (!tick) return;
+    const isRunning = (phase === "exercise" || phase === "rest") && !isPaused;
+    if (isRunning) {
+      tick.play().catch(() => {});
+    } else {
+      tick.pause();
+      tick.currentTime = 0;
+    }
+  }, [phase, isPaused]);
+
   // Cleanup on unmount
   useEffect(() => () => stop(), [stop]);
 
   // Start / Resume / Pause
-  const handleStart = () => {
+  const handleStart = useCallback(() => {
     start();
     lastTickRef.current = Date.now();
     go(1000);
-  };
+  }, [start, go]);
 
-  const handlePause = () => {
+  const handlePause = useCallback(() => {
     if (!isPaused) {
       elapsedRef.current = Date.now() - lastTickRef.current;
       stop();
@@ -97,7 +130,20 @@ export default function CardioTimer() {
       go(1000 - elapsedRef.current);
     }
     pause();
-  };
+  }, [isPaused, stop, go, pause]);
+
+  // Spacebar shortcut
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.code !== "Space" || (e.target as HTMLElement).tagName === "BUTTON")
+        return;
+      e.preventDefault();
+      if (phase === "idle" || phase === "done") handleStart();
+      else handlePause();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [phase, handleStart, handlePause]);
 
   const handleReset = () => {
     stop();
