@@ -1,9 +1,9 @@
 "use client";
 
-import { Zap, ChevronsUp, Dumbbell, Mountain, Flame, BatteryCharging, Trophy, Timer, type LucideIcon } from "lucide-react";
+import { Zap, ChevronsUp, Dumbbell, Mountain, BatteryCharging, Trophy, Timer, type LucideIcon } from "lucide-react";
 import { CIRC, EX, fmt, type Phase } from "@/lib/constants";
 
-const EX_ICONS: LucideIcon[] = [Zap, ChevronsUp, Dumbbell, Mountain, Flame];
+const EX_ICONS: LucideIcon[] = [Zap, ChevronsUp, Dumbbell, Mountain, Zap];
 
 interface TimerRingProps {
   phase: Phase;

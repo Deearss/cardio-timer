@@ -15,7 +15,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-const EX_ICONS: LucideIcon[] = [Zap, ChevronsUp, Dumbbell, Mountain, Flame];
+const EX_ICONS: LucideIcon[] = [Zap, ChevronsUp, Dumbbell, Mountain, Zap];
 import { EX, fmt, type Phase } from "@/lib/constants";
 
 interface ExerciseListProps {
