@@ -1,0 +1,16 @@
+/* ════════════════════════════════════════════════
+   🎛️  CARDIO TIMER — FONT & SIZE CONFIG
+   ════════════════════════════════════════════════
+   Ubah --ct-base-size untuk scale seluruh teks
+   dan elemen UI secara proporsional.
+
+   Contoh:
+     14px  → lebih kecil dari default
+     16px  → default
+     18px  → sedikit lebih besar
+     20px  → besar
+   ════════════════════════════════════════════════ */
+
+:root {
+  --ct-base-size: 17.5px;
+}
